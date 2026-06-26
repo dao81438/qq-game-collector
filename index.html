@@ -1,80 +1,128 @@
--- QQ群联机游戏收集器 - Supabase 数据库建表脚本
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QQ群联机游戏收集器</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  :root {
+    --bg: #0f0f1a;
+    --card-bg: #1a1a2e;
+    --card-hover: #222240;
+    --accent: #6c5ce7;
+    --accent-glow: #a29bfe;
+    --green: #00cec9;
+    --green-bg: rgba(0, 206, 201, 0.15);
+    --text: #e0e0e0;
+    --text-dim: #888;
+    --border: #2a2a45;
+    --radius: 12px;
+    --transition: 0.2s ease;
+  }
 
--- 游戏列表表
-CREATE TABLE IF NOT EXISTS games (
-  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  name TEXT NOT NULL UNIQUE,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
+  * { margin: 0; padding: 0; box-sizing: border-box; }
 
--- 用户游戏选择表
-CREATE TABLE IF NOT EXISTS user_games (
-  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  user_name TEXT NOT NULL,
-  game_id BIGINT NOT NULL REFERENCES games(id) ON DELETE CASCADE,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(user_name, game_id)
-);
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse at 20% 20%, rgba(108, 92, 231, 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(0, 206, 201, 0.06) 0%, transparent 50%);
+  }
 
--- 索引
-CREATE INDEX IF NOT EXISTS idx_user_games_user ON user_games(user_name);
-CREATE INDEX IF NOT EXISTS idx_user_games_game ON user_games(game_id);
-CREATE INDEX IF NOT EXISTS idx_games_name ON games(name);
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px 16px 40px;
+  }
 
--- 启用 RLS
-ALTER TABLE games ENABLE ROW LEVEL SECURITY;
-ALTER TABLE user_games ENABLE ROW LEVEL SECURITY;
+  .header {
+    text-align: center;
+    padding: 32px 0 20px;
+  }
+  .header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent-glow), var(--green));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .header .subtitle {
+    color: var(--text-dim);
+    margin-top: 6px;
+    font-size: 14px;
+  }
 
--- 允许匿名用户读取全部数据
-CREATE POLICY "允许任何人读取游戏列表" ON games
-  FOR SELECT USING (true);
+  .user-panel {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+  }
+  .user-panel label {
+    font-weight: 600;
+    font-size: 15px;
+    white-space: nowrap;
+  }
+  .user-panel input {
+    flex: 1;
+    min-width: 160px;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+    transition: var(--transition);
+  }
+  .user-panel input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15);
+  }
+  .btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-primary:hover {
+    background: #7c6cf0;
+    transform: translateY(-1px);
+  }
+  .btn-outline {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .btn-outline:hover {
+    border-color: var(--accent);
+    color: var(--accent-glow);
+  }
 
-CREATE POLICY "允许任何人读取用户选择" ON user_games
-  FOR SELECT USING (true);
-
--- 允许匿名用户插入/删除
-CREATE POLICY "允许任何人添加游戏" ON games
-  FOR INSERT WITH CHECK (true);
-
-CREATE POLICY "允许任何人删除游戏" ON games
-  FOR DELETE USING (true);
-
-CREATE POLICY "允许任何人添加选择" ON user_games
-  FOR INSERT WITH CHECK (true);
-
-CREATE POLICY "允许任何人删除选择" ON user_games
-  FOR DELETE USING (true);
-
--- 插入默认热门游戏
-INSERT INTO games (name) VALUES
-  ('英雄联盟 / LOL'),
-  ('王者荣耀'),
-  ('永劫无间'),
-  ('CS2 / CS:GO'),
-  ('Valorant'),
-  ('Apex Legends'),
-  ('绝地求生 / PUBG'),
-  ('堡垒之夜 / Fortnite'),
-  ('我的世界 / Minecraft'),
-  ('Among Us'),
-  ('鹅鸭杀 / Goose Goose Duck'),
-  ('恐鬼症 / Phasmophobia'),
-  ('Lethal Company'),
-  ('幻兽帕鲁 / Palworld'),
-  ('GTA5 Online'),
-  ('彩虹六号 / R6'),
-  ('守望先锋2 / OW2'),
-  ('Dota 2'),
-  ('魔兽世界 / WoW'),
-  ('最终幻想14 / FF14'),
-  ('崩坏：星穹铁道'),
-  ('原神'),
-  ('怪物猎人 / MH'),
-  ('艾尔登法环 / Elden Ring'),
-  ('暗黑破坏神4 / Diablo 4'),
-  ('星际战甲 / Warframe'),
-  ('命运2 / Destiny 2'),
-  ('Rust'),
-  ('DayZ'),
-  ('逃离塔科夫 / EFT')
-ON CONFLICT (name) DO NOTHING;
+  .current-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    background: var(--green-bg);
+    border: 1px solid rgba(0, 206, 201, 0.2);
+    border-radius: var(--radius);
+    margin-bottom: 20px;
