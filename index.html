@@ -431,16 +431,19 @@ let myGameIds = new Set();
 let allUserGames = [];
 
 async function init() {
-  if (SUPABASE_URL === 'YOUR_SUPABASE_URL') {
-    document.getElementById('loadingOverlay').innerHTML = `
-      <div style="text-align:center;padding:20px;color:#e74c3c">
-        <p style="font-size:24px;margin-bottom:12px">未配置 Supabase</p>
-        <p style="font-size:14px;color:var(--text-dim)">请按照部署说明配置 SUPABASE_URL 和 SUPABASE_ANON_KEY</p>
-      </div>`;
+  try {
+    await loadAllData();
+  } catch (e) {
+    console.error('初始化失败:', e);
+    document.getElementById('loadingOverlay').innerHTML =
+      '<div style="text-align:center;padding:20px;">' +
+        '<p style="font-size:18px;color:#e74c3c;margin-bottom:10px">连接失败</p>' +
+        '<p style="font-size:13px;color:#888;">请检查网络连接或刷新重试</p>' +
+        '<p style="font-size:11px;color:#888;margin-top:6px;">' + (e.message || '未知错误') + '</p>' +
+        '<button class="btn btn-primary" style="margin-top:14px" onclick="location.reload()">刷新重试</button>' +
+      '</div>';
     return;
   }
-
-  await loadAllData();
 
   const saved = localStorage.getItem('qqGameCollectorUser');
   if (saved) {
@@ -531,19 +534,17 @@ function renderGames() {
 
   grid.innerHTML = sorted.map(game => {
     const selected = myGameIds.has(game.id);
-    return `
-      <div class="game-card ${selected ? 'selected' : ''}" onclick="toggleGame(${game.id}, '${escapeHtml(game.name)}')">
-        <div class="checkbox"></div>
-        <span class="game-name">${escapeHtml(game.name)}</span>
-        ${game.player_count > 0 ? `<span class="player-count">${game.player_count}人</span>` : ''}
-      </div>
-    `;
+    return '<div class="game-card' + (selected ? ' selected' : '') + '" onclick="toggleGame(' + game.id + ')">' +
+        '<div class="checkbox"></div>' +
+        '<span class="game-name">' + escapeHtml(game.name) + '</span>' +
+        (game.player_count > 0 ? '<span class="player-count">' + game.player_count + '人</span>' : '') +
+      '</div>';
   }).join('');
 
   document.getElementById('totalGameCount').textContent = games.length;
 }
 
-async function toggleGame(gameId, gameName) {
+async function toggleGame(gameId) {
   if (!currentUser) {
     showToast('请先输入你的昵称');
     return;
@@ -627,23 +628,23 @@ function renderStats() {
     .sort((a, b) => b.players.length - a.players.length);
 
   if (sorted.length === 0) {
-    body.innerHTML = '<p style="color:var(--text-dim);text-align:center;padding:20px">还没有人选择游戏，快来成为第一个吧！</p>';
+    body.innerHTML = '<p style="color:#888;text-align:center;padding:20px">还没有人选择游戏，快来成为第一个吧！</p>';
     return;
   }
 
-  body.innerHTML = sorted.map(s => `
-    <div class="game-stat-row">
-      <span class="stat-game">${escapeHtml(s.name)}</span>
-      <span class="stat-players">
-        ${s.players.map(p => `<span class="player-tag">${escapeHtml(p)}</span>`).join('')}
-      </span>
-    </div>
-  `).join('');
+  body.innerHTML = sorted.map(s =>
+    '<div class="game-stat-row">' +
+      '<span class="stat-game">' + escapeHtml(s.name) + '</span>' +
+      '<span class="stat-players">' +
+        s.players.map(p => '<span class="player-tag">' + escapeHtml(p) + '</span>').join('') +
+      '</span>' +
+    '</div>'
+  ).join('');
 }
 
 function switchTab(tab) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelector(`.tab[data-tab="${tab}"]`).classList.add('active');
+  document.querySelector('.tab[data-tab="' + tab + '"]').classList.add('active');
   document.getElementById('tab-games').style.display = tab === 'games' ? 'block' : 'none';
   document.getElementById('tab-stats').style.display = tab === 'stats' ? 'block' : 'none';
 }
@@ -676,7 +677,7 @@ function showToast(msg) {
   toast.textContent = msg;
   toast.classList.add('show');
   clearTimeout(toast._timeout);
-  toast._timeout = setTimeout(() => toast.classList.remove('show'), 2000);
+  toast._timeout = setTimeout(function() { toast.classList.remove('show'); }, 2000);
 }
 
 document.getElementById('newGameInput').addEventListener('keydown', function(e) {
