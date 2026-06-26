@@ -153,8 +153,13 @@ function api(path, options) {
     headers: headers,
     body: options.body
   }).then(function(r) {
-    if (!r.ok) return r.json().then(function(e) { throw new Error(e.message || '请求失败'); });
-    return r.json();
+    if (!r.ok) {
+      return r.text().then(function(t) {
+        try { var e = JSON.parse(t); throw new Error(e.message || '请求失败'); }
+        catch (_) { throw new Error('请求失败 (' + r.status + ')'); }
+      });
+    }
+    return r.text().then(function(t) { return t ? JSON.parse(t) : []; });
   });
 }
 
@@ -273,7 +278,7 @@ function toggleGame(gameId) {
         return loadAllData();
       })
       .then(function() { updateUI(); })
-      .catch(function() { showToast('操作失败，请重试'); });
+      .catch(function(err) { showToast('操作失败：' + (err.message || '请重试')); });
   } else {
     api('/user_games', {
       method: 'POST',
@@ -284,7 +289,7 @@ function toggleGame(gameId) {
         return loadAllData();
       })
       .then(function() { updateUI(); })
-      .catch(function() { showToast('操作失败，请重试'); });
+      .catch(function(err) { showToast('操作失败：' + (err.message || '请重试')); });
   }
 }
 
@@ -303,7 +308,7 @@ function addGame() {
       return loadAllData();
     })
     .then(function() { updateUI(); showToast('已添加「' + name + '」'); })
-    .catch(function() { showToast('添加失败，请重试'); });
+    .catch(function(err) { showToast('添加失败：' + (err.message || '请重试')); });
 }
 
 function renderStats() {
