@@ -4,8 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>QQ群联机游戏收集器</title>
+
+<!-- Supabase SDK 引入 -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
 <style>
+  /* ================= 样式部分开始 ================= */
   :root {
     --bg: #0f0f1a;
     --card-bg: #1a1a2e;
@@ -43,6 +47,7 @@
     text-align: center;
     padding: 32px 0 20px;
   }
+  
   .header h1 {
     font-size: 28px;
     font-weight: 700;
@@ -51,6 +56,7 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+  
   .header .subtitle {
     color: var(--text-dim);
     margin-top: 6px;
@@ -68,11 +74,13 @@
     gap: 12px;
     align-items: center;
   }
+  
   .user-panel label {
     font-weight: 600;
     font-size: 15px;
     white-space: nowrap;
   }
+  
   .user-panel input {
     flex: 1;
     min-width: 160px;
@@ -85,10 +93,12 @@
     outline: none;
     transition: var(--transition);
   }
+  
   .user-panel input:focus {
     border-color: var(--accent);
     box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15);
   }
+  
   .btn {
     padding: 10px 20px;
     border: none;
@@ -99,24 +109,29 @@
     transition: var(--transition);
     white-space: nowrap;
   }
+  
   .btn-primary {
     background: var(--accent);
     color: #fff;
   }
+  
   .btn-primary:hover {
     background: #7c6cf0;
     transform: translateY(-1px);
   }
+  
   .btn-outline {
     background: transparent;
     border: 1px solid var(--border);
     color: var(--text);
   }
+  
   .btn-outline:hover {
     border-color: var(--accent);
     color: var(--accent-glow);
   }
 
+  /* 补全之前你没闭合的大括号！ */
   .current-user {
     display: flex;
     align-items: center;
@@ -126,3 +141,96 @@
     border: 1px solid rgba(0, 206, 201, 0.2);
     border-radius: var(--radius);
     margin-bottom: 20px;
+  }
+  
+  .current-user span {
+    color: var(--green);
+    font-weight: bold;
+  }
+
+  /* 下面为了美观给你预留了一个卡片列表样式，方便你装载数据库抓取出来的游戏 */
+  .game-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: var(--transition);
+  }
+  .game-card:hover {
+    background: var(--card-hover);
+    border-color: rgba(108, 92, 231, 0.5);
+  }
+</style>
+</head>
+
+<body>
+  <!-- ================= 页面主体结构开始 ================= -->
+  <div class="container">
+    
+    <!-- 头部区域 -->
+    <div class="header">
+      <h1>QQ群联机游戏收集器</h1>
+      <div class="subtitle">提报你最近想开黑的游戏，在线招募你的队友 🎮</div>
+    </div>
+
+    <!-- 用户身份提示区域 (对应你的 .current-user 类) -->
+    <div class="current-user">
+      <span>🟢 当前用户状态：</span>
+      <div>未实名群友（准备发车中）</div>
+    </div>
+
+    <!-- 数据提交/操作区域 (对应你的 .user-panel 类) -->
+    <div class="user-panel">
+      <label>游戏名称</label>
+      <input type="text" id="gameName" placeholder="比如：幻兽帕鲁 / 绝地潜兵2 / 杀戮尖塔" />
+      
+      <label>缺几个人</label>
+      <input type="number" id="playersNeed" placeholder="输入人数 (比如: 3)" style="min-width: 120px;" />
+      
+      <button class="btn btn-primary" onclick="submitGame()">提交提报</button>
+      <button class="btn btn-outline" onclick="refreshList()">刷新大厅</button>
+    </div>
+
+    <!-- 展示提交游戏列表的空白骨架 -->
+    <div id="gameList">
+      <!-- 这个内容是假数据演示用的，等连上你的 supabase 就能写 js 替换了 -->
+      <div class="game-card">
+        <div>
+          <h3 style="margin-bottom: 5px;">🔥 幻兽帕鲁 (Palworld)</h3>
+          <span style="font-size: 13px; color: var(--text-dim);">发车群友: 学计算机的小李</span>
+        </div>
+        <div>
+          <span style="color: var(--accent-glow); font-weight: bold; margin-right: 10px;">差 2 人</span>
+          <button class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;">上车</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ================= JS逻辑骨架预留 ================= -->
+  <script>
+    // 在这里初始化你的 Supabase
+    // const supabaseUrl = 'YOUR_SUPABASE_URL';
+    // const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
+    // const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+    function submitGame() {
+      // 获取用户输入的值，给将来接上数据库用
+      const name = document.getElementById('gameName').value;
+      const count = document.getElementById('playersNeed').value;
+      if (!name) return alert('你得填个游戏名字呀！');
+      
+      alert('已假装向 Supabase 数据库提交游戏：' + name + '，还差 ' + count + '人');
+    }
+
+    function refreshList() {
+      alert('刷新列表请求触发');
+    }
+  </script>
+</body>
+</html>
